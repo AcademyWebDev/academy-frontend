@@ -1,6 +1,8 @@
-import { defineStore } from 'pinia'
-import { z } from 'zod'
-import { useAxios } from '~/composables/useAxios'
+// stores/auth.ts
+import {defineStore} from 'pinia'
+import {ref, computed} from 'vue'
+import {z} from 'zod'
+import {useAxios} from '~/composables/useAxios'
 
 const userSchema = z.object({
     id: z.number(),
@@ -12,115 +14,158 @@ const userSchema = z.object({
 
 export type User = z.infer<typeof userSchema>
 
-interface AuthState {
-    user: User | null
-    token: string | null
-    loading: boolean
+interface RegisterData {
+    firstName: string
+    lastName: string
+    email: string
+    password: string
+    role: 'student' | 'lecturer'
 }
 
-export const useAuthStore = defineStore('auth', {
-    state: (): AuthState => ({
-        user: null,
-        token: null,
-        loading: false,
-    }),
+export const useAuthStore = defineStore('auth', () => {
+    const user = ref<User | null>(null)
+    const token = ref<string | null>(null)
+    const loading = ref(false)
 
-    getters: {
-        isAuthenticated: (state) => !!state.token && !!state.user,
-        userRole: (state) => state.user?.role,
-        isAdmin: (state) => state.user?.role === 'admin',
-        isLecturer: (state) => state.user?.role === 'lecturer',
-        isStudent: (state) => state.user?.role === 'student',
-    },
+    const isAuthenticated = computed(() => !!token.value && !!user.value)
+    const userRole = computed(() => user.value?.role)
+    const isAdmin = computed(() => user.value?.role === 'admin')
+    const isLecturer = computed(() => user.value?.role === 'lecturer')
+    const isStudent = computed(() => user.value?.role === 'student')
 
-    actions: {
-        async login(email: string, password: string) {
-            this.loading = true;
-            try {
-                if (process.env.NODE_ENV === 'development') {
-                    // Mock login for development
-                    await new Promise(resolve => setTimeout(resolve, 1000))
-                    const mockUser = {
-                        id: 1,
-                        email,
-                        name: 'John Doe',
-                        role: 'student',
-                        avatar: '/default-avatar.png'
-                    }
-                    this.setUser(mockUser)
-                    this.setToken('mock-token')
-                    return
-                }
-
-                const axios = useAxios()
-                const { data } = await axios.post('/api/auth/login', {
+    async function login(email: string, password: string) {
+        loading.value = true
+        try {
+            if (process.env.NODE_ENV === 'development') {
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                const mockUser: User = {
+                    id: 1,
                     email,
-                    password
-                })
-
-                this.setUser(data.user)
-                this.setToken(data.token)
-            } catch (error) {
-                console.error('Login error:', error)
-                throw error
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async logout() {
-            try {
-                if (process.env.NODE_ENV !== 'development') {
-                    const axios = useAxios()
-                    await axios.post('/api/auth/logout')
+                    name: 'John Doe',
+                    role: 'student',
+                    avatar: '/default-avatar.png'
                 }
-            } catch (error) {
-                console.error('Logout error:', error)
-            } finally {
-                this.clearAuth()
+                setUser(mockUser)
+                setToken('mock-token')
+                return
             }
-        },
 
-        async checkAuth() {
-            if (!this.token) return false
+            const axios = useAxios()
+            const {data} = await axios.post('/api/auth/login', {
+                email,
+                password
+            })
 
-            try {
-                if (process.env.NODE_ENV === 'development') {
-                    return true
-                }
-
-                const axios = useAxios()
-                const { data } = await axios.get('/api/auth/me')
-                this.setUser(data.user)
-                return true
-            } catch (error) {
-                this.clearAuth()
-                return false
-            }
-        },
-
-        setUser(user: User) {
-            this.user = user
-        },
-
-        setToken(token: string) {
-            this.token = token
-            // Store token in localStorage for persistence
-            localStorage.setItem('auth_token', token)
-        },
-
-        clearAuth() {
-            this.user = null
-            this.token = null
-            localStorage.removeItem('auth_token')
-        },
-
-        initAuth() {
-            const token = localStorage.getItem('auth_token')
-            if (token) {
-                this.token = token
-                this.checkAuth()
-            }
+            setUser(data.user)
+            setToken(data.token)
+        } catch (error) {
+            console.error('Login error:', error)
+            throw error
+        } finally {
+            loading.value = false
         }
-    },
+    }
+
+    async function register(data: RegisterData) {
+        loading.value = true
+        try {
+            if (process.env.NODE_ENV === 'development') {
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                const mockUser = {
+                    id: 1,
+                    email: data.email,
+                    name: `${data.firstName} ${data.lastName}`,
+                    role: data.role,
+                    avatar: '/default-avatar.png'
+                }
+                setUser(mockUser)
+                setToken('mock-token')
+                return
+            }
+
+            const axios = useAxios()
+            const response = await axios.post('/api/auth/register', data)
+
+            setUser(response.data.user)
+            setToken(response.data.token)
+        } catch (error) {
+            console.error('Registration error:', error)
+            throw error
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function logout() {
+        try {
+            if (process.env.NODE_ENV !== 'development') {
+                const axios = useAxios()
+                await axios.post('/api/auth/logout')
+            }
+        } catch (error) {
+            console.error('Logout error:', error)
+        } finally {
+            clearAuth()
+        }
+    }
+
+    async function checkAuth() {
+        if (!token.value) return false
+
+        try {
+            if (process.env.NODE_ENV === 'development') {
+                return true
+            }
+
+            const axios = useAxios()
+            const {data} = await axios.get('/api/auth/me')
+            setUser(data.user)
+            return true
+        } catch (error) {
+            clearAuth()
+            return false
+        }
+    }
+
+    function setUser(userData: User) {
+        user.value = userData
+    }
+
+    function setToken(tokenValue: string) {
+        token.value = tokenValue
+        localStorage.setItem('auth_token', tokenValue)
+    }
+
+    function clearAuth() {
+        user.value = null
+        token.value = null
+        localStorage.removeItem('auth_token')
+    }
+
+    function initAuth() {
+        const storedToken = localStorage.getItem('auth_token')
+        if (storedToken) {
+            token.value = storedToken
+            checkAuth()
+        }
+    }
+
+    return {
+        user,
+        token,
+        loading,
+        isAuthenticated,
+        userRole,
+        isAdmin,
+        isLecturer,
+        isStudent,
+        login,
+        register,
+        logout,
+        checkAuth,
+        setUser,
+        setToken,
+        clearAuth,
+        initAuth
+    }
 })
