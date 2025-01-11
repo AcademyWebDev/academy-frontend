@@ -85,15 +85,6 @@ definePageMeta({
               autocomplete="current-password"
           />
 
-          <div class="login-page__remember">
-            <NuxtLink
-                to="/forgot-password"
-                class="text-sm text-primary-600 hover:text-primary-500"
-            >
-              Forgot password?
-            </NuxtLink>
-          </div>
-
           <BaseButton
               type="submit"
               :loading="authStore.loading"
