@@ -88,7 +88,7 @@ definePageMeta({
 
     <form @submit.prevent="handleSubmit" class="signup-page__form">
       <div class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="flex grid-cols-2 gap-4">
           <BaseInput
               v-model="formData.firstName"
               label="First Name"
@@ -133,17 +133,17 @@ definePageMeta({
             autocomplete="new-password"
         />
 
-        <!-- Role Selection -->
-        <div class="space-y-2">
+        <div class="space-y-2 flex flex-col gap-1">
           <label class="text-sm font-medium text-gray-700">I am a:</label>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="flex grid-cols-2 gap-4">
             <button
                 type="button"
                 @click="formData.role = 'student'"
                 :class="[
-                'signup-page__role-btn',
-                { 'signup-page__role-btn--active': formData.role === 'student' }
-              ]"
+                  'signup-page__role-btn',
+                  { 'signup-page__role-btn--active': formData.role === 'student' }
+                ]"
+                class="w-full"
             >
               <UserIcon class="w-5 h-5"/>
               <span>Student</span>
@@ -153,9 +153,10 @@ definePageMeta({
                 type="button"
                 @click="formData.role = 'lecturer'"
                 :class="[
-                'signup-page__role-btn',
-                { 'signup-page__role-btn--active': formData.role === 'lecturer' }
-              ]"
+                  'signup-page__role-btn',
+                  { 'signup-page__role-btn--active': formData.role === 'lecturer' }
+                ]"
+                class="w-full"
             >
               <AcademicCapIcon class="w-5 h-5"/>
               <span>Lecturer</span>
@@ -166,7 +167,6 @@ definePageMeta({
           </p>
         </div>
 
-        <!-- Terms and Conditions -->
         <div class="space-y-2">
           <label class="signup-page__checkbox">
             <input
