@@ -3,26 +3,26 @@
   <div class="base-dropdown" v-click-outside="close">
     <!-- Trigger -->
     <div @click="toggle" class="base-dropdown__trigger">
-      <slot name="trigger"/>
+      <slot name="trigger" />
     </div>
 
     <!-- Dropdown Content -->
     <Transition
-        enter-active-class="transition duration-100 ease-out"
-        enter-from-class="transform scale-95 opacity-0"
-        enter-to-class="transform scale-100 opacity-100"
-        leave-active-class="transition duration-75 ease-in"
-        leave-from-class="transform scale-100 opacity-100"
-        leave-to-class="transform scale-95 opacity-0"
+        enter-active-class="transition ease-out duration-200"
+        enter-from-class="opacity-0 translate-y-1"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition ease-in duration-150"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 translate-y-1"
     >
       <div
           v-if="isOpen"
           :class="[
           'base-dropdown__content',
-          `base-dropdown__content--${placement}`
+          `base-dropdown__content--${position}`
         ]"
       >
-        <slot name="content"/>
+        <slot name="content" />
       </div>
     </Transition>
   </div>
@@ -30,11 +30,11 @@
 
 <script setup lang="ts">
 interface Props {
-  placement?: 'top' | 'bottom' | 'left' | 'right'
+  position?: 'left' | 'right'
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  placement: 'bottom'
+withDefaults(defineProps<Props>(), {
+  position: 'left'
 })
 
 const isOpen = ref(false)
@@ -72,23 +72,17 @@ const vClickOutside = {
   }
 
   &__content {
-    @apply absolute z-50 min-w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg
-    border border-gray-200 dark:border-gray-700 overflow-hidden;
-
-    &--bottom {
-      @apply top-full mt-2 left-0;
-    }
-
-    &--top {
-      @apply bottom-full mb-2 left-0;
-    }
+    @apply absolute z-50 mt-2 w-56
+    bg-white dark:bg-gray-800
+    rounded-lg shadow-lg
+    border border-gray-200 dark:border-gray-700;
 
     &--left {
-      @apply right-full mr-2 top-0;
+      @apply left-0;
     }
 
     &--right {
-      @apply left-full ml-2 top-0;
+      @apply right-8;
     }
   }
 }

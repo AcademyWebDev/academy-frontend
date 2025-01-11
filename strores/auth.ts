@@ -43,7 +43,7 @@ export const useAuthStore = defineStore('auth', () => {
                     email,
                     name: 'John Doe',
                     role: 'student',
-                    avatar: '/default-avatar.png'
+                    avatar: '/default-avatar.jpg'
                 }
                 setUser(mockUser)
                 setToken('mock-token')
@@ -76,7 +76,7 @@ export const useAuthStore = defineStore('auth', () => {
                     email: data.email,
                     name: `${data.firstName} ${data.lastName}`,
                     role: data.role,
-                    avatar: '/default-avatar.png'
+                    avatar: '/default-avatar.jpg'
                 }
                 setUser(mockUser)
                 setToken('mock-token')
