@@ -1,0 +1,36 @@
+@use 'variables';
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity variables.$transition-normal ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: transform variables.$transition-normal ease, opacity variables.$transition-normal ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(1rem);
+  opacity: 0;
+}
+
+.loading-skeleton {
+  @apply animate-pulse bg-gray-200 rounded;
+
+  &-text {
+    @extend .loading-skeleton;
+    @apply h-4;
+  }
+
+  &-circle {
+    @extend .loading-skeleton;
+    @apply rounded-full;
+  }
+}
