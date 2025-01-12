@@ -372,7 +372,7 @@ const handleLogout = async () => {
   }
 
   &__notification-badge {
-    @apply absolute -top-1 -right-1 h-5 w-5
+    @apply absolute -top-1 -right-1 h-3.5 w-3.5
     flex items-center justify-center
     text-xs text-white bg-error-500
     rounded-full;
