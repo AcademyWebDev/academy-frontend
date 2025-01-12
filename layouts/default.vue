@@ -170,10 +170,6 @@ const handleLogout = async () => {
           >
             <Bars3Icon class="h-5 w-5"/>
           </button>
-
-          <div class="app-layout__breadcrumb">
-            <!-- You can add breadcrumbs here -->
-          </div>
         </div>
 
         <div class="flex items-center gap-4">

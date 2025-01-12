@@ -17,7 +17,6 @@ const formData = reactive({
   password: ''
 })
 
-const rememberMe = ref(false)
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -28,7 +27,7 @@ const handleSubmit = async () => {
 
   try {
     await authStore.login(formData.email, formData.password)
-    router.push('/dashboard')
+    navigateTo('/courses')
   } catch (error) {
     console.log(error)
   }
@@ -36,7 +35,7 @@ const handleSubmit = async () => {
 
 onMounted(() => {
   if (authStore.isAuthenticated) {
-    router.push('/dashboard')
+    router.push('/courses')
   }
 })
 
