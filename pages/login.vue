@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, reactive} from 'vue'
+import {reactive} from 'vue'
 import {definePageMeta} from '#imports'
 import {z} from 'zod'
 import {useFormValidation} from '~/composables/useFormValidation'
@@ -19,6 +19,7 @@ const formData = reactive({
 
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 
 const {validate, getError, isValid} = useFormValidation(loginSchema)
 
@@ -27,21 +28,17 @@ const handleSubmit = async () => {
 
   try {
     await authStore.login(formData.email, formData.password)
-    navigateTo('/courses')
+    const redirect = '/dashboard'
+
+    await navigateTo(decodeURIComponent(redirect), {replace: true})
   } catch (error) {
-    console.log(error)
+    console.error('Login failed:', error)
   }
 }
 
-onMounted(() => {
-  if (authStore.isAuthenticated) {
-    router.push('/courses')
-  }
-})
-
 definePageMeta({
   layout: 'auth',
-  middleware: 'guest'
+  middleware: ['guest']
 })
 </script>
 

@@ -1,0 +1,208 @@
+<script setup lang="ts">
+import {ref, computed} from 'vue'
+import {
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter
+} from '@coreui/vue'
+import BaseButton from "~/components/common/BaseButton.vue";
+
+
+interface Props {
+  show: boolean
+  lecturerCourses?: Array<{
+    id: number
+    title: string
+  }>
+}
+
+
+const props = withDefaults(defineProps<Props>(), {
+  lecturerCourses: () => []
+})
+
+// Emits
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'create', data: {
+    courseId: number
+    startTime: string
+    requireLocation: boolean
+  }): void
+}>()
+
+const creating = ref(false)
+const formData = ref({
+  courseId: '',
+  startTime: '',
+  requireLocation: false
+})
+
+const isValid = computed(() => {
+  return formData.value.courseId && formData.value.startTime
+})
+
+const handleSubmit = async () => {
+  if (!isValid.value) return
+
+  creating.value = true
+  try {
+    emit('create', {
+      courseId: Number(formData.value.courseId),
+      startTime: formData.value.startTime,
+      requireLocation: formData.value.requireLocation
+    })
+    emit('close')
+
+    formData.value = {
+      courseId: '',
+      startTime: '',
+      requireLocation: false
+    }
+  } catch (error) {
+    console.error('Failed to create session:', error)
+  } finally {
+    creating.value = false
+  }
+}
+
+watch(() => props.show, (newValue) => {
+  if (!newValue) {
+    formData.value = {
+      courseId: '',
+      startTime: '',
+      requireLocation: false
+    }
+  }
+})
+</script>
+
+<template>
+  <CModal
+      :visible="show"
+      @close="$emit('close')"
+      size="lg"
+      :backdrop="true"
+  >
+    <CModalHeader>
+      <CModalTitle>Create Attendance Session</CModalTitle>
+    </CModalHeader>
+    <CModalBody>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Course
+          </label>
+          <select
+              v-model="formData.courseId"
+              class="filters-dropdown__select"
+          >
+            <option value="" disabled>Select a course</option>
+            <option
+                v-for="course in lecturerCourses"
+                :key="course.id"
+                :value="course.id"
+            >
+              {{ course.title }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Start Time -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Start Time
+          </label>
+          <input
+              v-model="formData.startTime"
+              type="datetime-local"
+              class="filters-dropdown__select"
+          >
+        </div>
+
+        <!-- Location Requirement -->
+        <div class="flex items-center gap-2">
+          <input
+              v-model="formData.requireLocation"
+              type="checkbox"
+              class="form-checkbox rounded text-primary-600 dark:text-primary-400"
+          >
+          <label class="text-sm text-gray-700 dark:text-gray-300">
+            Require on-campus location
+          </label>
+        </div>
+      </div>
+    </CModalBody>
+    <CModalFooter>
+      <div class="flex justify-end gap-3">
+        <BaseButton
+            variant="outline"
+            @click="$emit('close')"
+        >
+          Cancel
+        </BaseButton>
+        <BaseButton
+            variant="primary"
+            :loading="creating"
+            :disabled="!isValid"
+            @click="handleSubmit"
+        >
+          Create Session
+        </BaseButton>
+      </div>
+    </CModalFooter>
+  </CModal>
+</template>
+
+<style lang="scss" scoped>
+.filters-dropdown__select {
+  @apply block w-full rounded-md
+  border-gray-300 dark:border-gray-600
+  bg-white dark:bg-gray-900
+  text-gray-900 dark:text-gray-100
+  shadow-sm transition-colors duration-200;
+
+  @apply focus:border-primary-500 dark:focus:border-primary-400
+  focus:ring-primary-500 dark:focus:ring-primary-400;
+}
+
+.modal {
+  .modal-content {
+    @apply dark:bg-gray-800 dark:border-gray-700;
+  }
+
+  .modal-header {
+    @apply dark:bg-gray-800 dark:border-gray-700 flex justify-between items-center;
+
+    .modal-title {
+      @apply dark:text-gray-100 text-lg font-semibold;
+    }
+
+    .btn-close {
+      @apply dark:text-gray-400 dark:hover:text-gray-300 dark:bg-none p-1;
+      // Remove default CoreUI background
+      background: none !important;
+    }
+  }
+
+  .modal-body {
+    @apply dark:bg-gray-800 dark:text-gray-100;
+  }
+
+  .modal-footer {
+    @apply dark:bg-gray-800 dark:border-gray-700;
+  }
+
+  .modal-backdrop {
+    @apply dark:bg-gray-900/75 backdrop-blur-sm;
+  }
+}
+
+.modal-header,
+.modal-body,
+.modal-footer {
+  padding: 1rem !important;
+}
+</style>

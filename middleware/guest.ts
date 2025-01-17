@@ -1,9 +1,14 @@
 import {useAuthStore} from "~/strores/auth";
 
-export default defineNuxtRouteMiddleware(() => {
+
+export default defineNuxtRouteMiddleware(async (to) => {
     const authStore = useAuthStore()
 
-    if (authStore.isAuthenticated) {
-        return navigateTo('/dashboard')
+    if (authStore.token) {
+        const isValid = await authStore.checkAuth()
+        if (isValid) {
+            const redirect = to.query.redirect as string || '/dashboard'
+            return navigateTo(redirect)
+        }
     }
 })

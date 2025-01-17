@@ -10,6 +10,8 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@coreui/coreui": "^5.2.0",
+    "@coreui/vue": "^5.4.1",
     "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
     "@iconify/vue": "^4.3.0",
@@ -22,6 +24,7 @@
     "dayjs": "^1.11.13",
     "lucide-vue-next": "^0.471.0",
     "nuxt": "^3.15.1",
+    "pinia-plugin-persistedstate": "^4.2.0",
     "sass": "^1.83.1",
     "vue": "latest",
     "vue-router": "latest",

@@ -133,21 +133,11 @@ export const useAuthStore = defineStore('auth', () => {
 
     function setToken(tokenValue: string) {
         token.value = tokenValue
-        localStorage.setItem('auth_token', tokenValue)
     }
 
     function clearAuth() {
         user.value = null
         token.value = null
-        localStorage.removeItem('auth_token')
-    }
-
-    function initAuth() {
-        const storedToken = localStorage.getItem('auth_token')
-        if (storedToken) {
-            token.value = storedToken
-            checkAuth()
-        }
     }
 
     return {
@@ -165,7 +155,12 @@ export const useAuthStore = defineStore('auth', () => {
         checkAuth,
         setUser,
         setToken,
-        clearAuth,
-        initAuth
+        clearAuth
+    }
+}, {
+    persist: {
+        key: 'auth',
+        storage: piniaPluginPersistedstate.localStorage(),
+        pick: ['user', 'token'],
     }
 })

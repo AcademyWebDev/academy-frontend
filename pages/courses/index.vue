@@ -110,7 +110,7 @@ onMounted(() => {
 
 definePageMeta({
   layout: 'default',
-  middleware: ['guest']
+  middleware: ['auth']
 })
 </script>
 

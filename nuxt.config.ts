@@ -1,10 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+    ssr: false,
     compatibilityDate: '2024-11-01',
     devtools: {enabled: true},
     modules: [
         '@pinia/nuxt',
         '@vueuse/nuxt',
+        'pinia-plugin-persistedstate/nuxt',
     ],
     css: [
         '@/assets/scss/main.scss',
@@ -14,6 +16,12 @@ export default defineNuxtConfig({
             tailwindcss: {},
             autoprefixer: {},
         },
+    },
+    app: {
+        pageTransition: {
+            name: 'page',
+            mode: 'out-in'
+        }
     },
     runtimeConfig: {
         public: {

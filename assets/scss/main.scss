@@ -2,6 +2,8 @@
 @use 'base';
 @use 'components';
 @use 'utilities';
+@use 'transitions';
+@import '@coreui/coreui/dist/css/coreui.min.css';
 
 @tailwind base;
 @tailwind components;
