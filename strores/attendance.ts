@@ -23,13 +23,11 @@ interface CreateSessionData {
 }
 
 export const useAttendanceStore = defineStore('attendance', () => {
-    // State
     const sessions = ref<AttendanceSession[]>([])
     const loading = ref(false)
     const creatingSession = ref(false)
     const error = ref<string | null>(null)
 
-    // Getters
     const activeSessions = computed(() =>
         sessions.value.filter(session => session.status === 'active')
     )
@@ -44,7 +42,6 @@ export const useAttendanceStore = defineStore('attendance', () => {
 
         try {
             if (process.env.NODE_ENV === 'development') {
-                // Mock data
                 await new Promise(resolve => setTimeout(resolve, 1000))
                 sessions.value = [
                     {
@@ -60,7 +57,6 @@ export const useAttendanceStore = defineStore('attendance', () => {
                         presentCount: 15,
                         totalStudents: 20
                     },
-                    // Add more mock sessions as needed
                 ]
                 return
             }
@@ -157,17 +153,14 @@ export const useAttendanceStore = defineStore('attendance', () => {
     }
 
     return {
-        // State
         sessions,
         loading,
         creatingSession,
         error,
 
-        // Getters
         activeSessions,
         endedSessions,
 
-        // Actions
         fetchSessions,
         createSession,
         endSession,
