@@ -7,8 +7,8 @@ import {
   CModalBody,
   CModalFooter
 } from '@coreui/vue'
+import {useAttendanceStore} from '~/strores/attendance'
 import BaseButton from "~/components/common/BaseButton.vue";
-
 
 interface Props {
   show: boolean
@@ -18,22 +18,16 @@ interface Props {
   }>
 }
 
-
 const props = withDefaults(defineProps<Props>(), {
   lecturerCourses: () => []
 })
 
-// Emits
 const emit = defineEmits<{
   (e: 'close'): void
-  (e: 'create', data: {
-    courseId: number
-    startTime: string
-    requireLocation: boolean
-  }): void
 }>()
 
-const creating = ref(false)
+const attendanceStore = useAttendanceStore()
+
 const formData = ref({
   courseId: '',
   startTime: '',
@@ -44,27 +38,24 @@ const isValid = computed(() => {
   return formData.value.courseId && formData.value.startTime
 })
 
+const minDateTime = computed(() => {
+  const now = new Date()
+  return now.toISOString().slice(0, 16)
+})
+
+// Methods
 const handleSubmit = async () => {
   if (!isValid.value) return
 
-  creating.value = true
   try {
-    emit('create', {
+    await attendanceStore.createSession({
       courseId: Number(formData.value.courseId),
       startTime: formData.value.startTime,
       requireLocation: formData.value.requireLocation
     })
     emit('close')
-
-    formData.value = {
-      courseId: '',
-      startTime: '',
-      requireLocation: false
-    }
   } catch (error) {
     console.error('Failed to create session:', error)
-  } finally {
-    creating.value = false
   }
 }
 
@@ -110,7 +101,6 @@ watch(() => props.show, (newValue) => {
           </select>
         </div>
 
-        <!-- Start Time -->
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Start Time
@@ -119,10 +109,10 @@ watch(() => props.show, (newValue) => {
               v-model="formData.startTime"
               type="datetime-local"
               class="filters-dropdown__select"
+              :min="minDateTime"
           >
         </div>
 
-        <!-- Location Requirement -->
         <div class="flex items-center gap-2">
           <input
               v-model="formData.requireLocation"
@@ -145,7 +135,7 @@ watch(() => props.show, (newValue) => {
         </BaseButton>
         <BaseButton
             variant="primary"
-            :loading="creating"
+            :loading="attendanceStore.creatingSession"
             :disabled="!isValid"
             @click="handleSubmit"
         >

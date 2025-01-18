@@ -1,94 +1,52 @@
 <script setup lang="ts">
-import {ref, computed} from 'vue'
 import {
   PlusIcon,
   FunnelIcon,
-  ChartBarIcon,
+  ArrowDownTrayIcon,
   ExclamationCircleIcon,
   ClipboardIcon,
   UserIcon,
   MapPinIcon
 } from '@heroicons/vue/24/outline'
 import {useAuthStore} from '~/strores/auth'
+import {useAttendanceStore} from '~/strores/attendance'
 import BaseDropdown from "~/components/common/BaseDropdown.vue";
 import BaseButton from "~/components/common/BaseButton.vue";
 import CreateAttendanceSessionPopup from "~/components/attendance/CreateAttendanceSessionPopup.vue";
 
+// Stores
 const authStore = useAuthStore()
-const isLecturer = computed(() => authStore.isLecturer || authStore.isAdmin)
+const attendanceStore = useAttendanceStore()
 
-const loading = ref(false)
-const error = ref<string | null>(null)
+// State
 const showCreateSession = ref(false)
-const creatingSession = ref(false)
 const markingAttendance = ref<number | null>(null)
-
-// Filters
 const filters = ref({
   dateRange: 'week',
   courseId: 'all',
   status: 'all'
 })
 
-// Form state for new session
-const newSession = ref({
-  courseId: null as number | null,
-  startTime: '',
-  requireLocation: false
-})
-
+// Mock data (replace with course store)
 const courses = ref([
-  {id: 1, title: 'Web Development', lecturer: 'Dr. Smith'},
-  {id: 2, title: 'Mobile Development', lecturer: 'Dr. Johnson'}
+  {id: 1, title: 'Web Development'},
+  {id: 2, title: 'Mobile Development'}
 ])
 
-const sessions = ref([
-  {
-    id: 1,
-    courseId: 1,
-    course: {
-      title: 'Web Development',
-      lecturer: 'Dr. Smith'
-    },
-    status: 'active',
-    startTime: '2024-01-14T09:00:00',
-    requireLocation: true,
-    presentCount: 15,
-    totalStudents: 20
-  },
-  {
-    id: 2,
-    courseId: 2,
-    course: {
-      title: 'Mobile Development',
-      lecturer: 'Dr. Johnson'
-    },
-    status: 'ended',
-    startTime: '2024-01-14T11:00:00',
-    requireLocation: false,
-    presentCount: 18,
-    totalStudents: 25
-  }
-])
-
-const lecturerCourses = computed(() => {
-  return courses.value
-})
+// Computed
+const isLecturer = computed(() => authStore.isLecturer || authStore.isAdmin)
 
 const filteredSessions = computed(() => {
-  let filtered = sessions.value
+  let filtered = attendanceStore.sessions
 
-  // Filter by course
   if (filters.value.courseId !== 'all') {
     filtered = filtered.filter(session => session.courseId === filters.value.courseId)
   }
 
-  // Filter by status
   if (filters.value.status !== 'all') {
     filtered = filtered.filter(session => session.status === filters.value.status)
   }
 
-  // Filter by date range
   const now = new Date()
   switch (filters.value.dateRange) {
     case 'today':
@@ -113,83 +71,23 @@ const filteredSessions = computed(() => {
   return filtered
 })
 
-const isValidSession = computed(() => {
-  return newSession.value.courseId && newSession.value.startTime
-})
-
-const fetchSessions = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    // Replace with API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    // sessions.value = await response.data
-  } catch (err) {
-    error.value = 'Failed to load attendance sessions'
-    console.error('Error fetching sessions:', err)
-  } finally {
-    loading.value = false
-  }
-}
-
-const createSession = async () => {
-  creatingSession.value = true
-  try {
-    // Replace with API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    const newSessionData = {
-      id: Date.now(),
-      ...newSession.value,
-      status: 'active',
-      course: courses.value.find(c => c.id === newSession.value.courseId),
-      presentCount: 0,
-      totalStudents: 25
-    }
-    sessions.value.unshift(newSessionData)
-    showCreateSession.value = false
-    newSession.value = {
-      courseId: null,
-      startTime: '',
-      requireLocation: false
-    }
-  } catch (err) {
-    console.error('Error creating session:', err)
-  } finally {
-    creatingSession.value = false
-  }
-}
-
 const endSession = async (sessionId: number) => {
   try {
-    // Replace with API call
-    await new Promise(resolve => setTimeout(resolve, 500))
-    const session = sessions.value.find(s => s.id === sessionId)
-    if (session) {
-      session.status = 'ended'
-    }
-  } catch (err) {
-    console.error('Error ending session:', err)
+    await attendanceStore.endSession(sessionId)
+  } catch (error) {
+    // Error is handled in store
   }
 }
 
 const markAttendance = async (sessionId: number) => {
   markingAttendance.value = sessionId
   try {
-    // Replace with API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    const session = sessions.value.find(s => s.id === sessionId)
-    if (session) {
-      session.presentCount++
-    }
-  } catch (err) {
-    console.error('Error marking attendance:', err)
+    await attendanceStore.markAttendance(sessionId)
+  } catch (error) {
+    // Error is handled in store
   } finally {
     markingAttendance.value = null
   }
-}
-
-const hasMarkedAttendance = (sessionId: number) => {
-  return false
 }
 
 const viewSessionDetails = (sessionId: number) => {
@@ -197,8 +95,7 @@ const viewSessionDetails = (sessionId: number) => {
 }
 
 const formatDateTime = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleString()
+  return new Date(dateString).toLocaleString()
 }
 
 const calculateRate = (present: number, total: number) => {
@@ -207,21 +104,16 @@ const calculateRate = (present: number, total: number) => {
 
 // Fetch data on mount
 onMounted(() => {
-  fetchSessions()
+  attendanceStore.fetchSessions()
 })
 
-// Page meta
 definePageMeta({
-  layout: 'default',
   middleware: ['auth']
 })
-
 </script>
-
 
 <template>
   <div class="attendance-page">
-    <!-- Header Section -->
     <header class="attendance-page__header">
       <div>
         <h1 class="attendance-page__title">Attendance</h1>
@@ -231,7 +123,6 @@ definePageMeta({
       </div>
 
       <div class="attendance-page__actions">
-        <!-- Lecturer Actions -->
         <BaseButton
             v-if="isLecturer"
             variant="primary"
@@ -241,7 +132,6 @@ definePageMeta({
           Create Session
         </BaseButton>
 
-        <!-- Filter Dropdown -->
         <BaseDropdown position="right">
           <template #trigger>
             <BaseButton variant="outline" :leftIcon="FunnelIcon">
@@ -281,35 +171,31 @@ definePageMeta({
           </template>
         </BaseDropdown>
 
-        <!-- Reports Button for Lecturers -->
         <BaseButton
             v-if="isLecturer"
             variant="outline"
-            :leftIcon="ChartBarIcon"
-            @click="navigateTo('/attendance/reports')"
+            :leftIcon="ArrowDownTrayIcon"
         >
-          Reports
+          Export
         </BaseButton>
       </div>
     </header>
 
-    <!-- Main Content -->
     <div class="attendance-page__content">
-      <!-- Loading State -->
-      <div v-if="loading" class="attendance-page__loading">
+      <div v-if="attendanceStore.loading" class="attendance-page__loading">
         <div v-for="n in 3" :key="n" class="attendance-page__skeleton"/>
       </div>
 
-      <!-- Error State -->
-      <div v-else-if="error" class="attendance-page__error">
+      <div v-else-if="attendanceStore.error" class="attendance-page__error">
         <ExclamationCircleIcon class="h-12 w-12 text-error-500"/>
         <p class="text-lg font-medium text-gray-900 dark:text-gray-100">
-          {{ error }}
+          {{ attendanceStore.error }}
         </p>
-        <BaseButton @click="fetchSessions">Try Again</BaseButton>
+        <BaseButton @click="attendanceStore.fetchSessions">
+          Try Again
+        </BaseButton>
       </div>
 
-      <!-- Empty State -->
       <div v-else-if="!filteredSessions.length" class="attendance-page__empty">
         <ClipboardIcon class="h-12 w-12 text-gray-400 dark:text-gray-500"/>
         <p class="text-lg font-medium text-gray-900 dark:text-gray-100">
@@ -322,7 +208,6 @@ definePageMeta({
         </p>
       </div>
 
-      <!-- Sessions Grid -->
       <div v-else class="attendance-page__grid">
         <div
             v-for="session in filteredSessions"
@@ -360,7 +245,6 @@ definePageMeta({
               </div>
             </div>
 
-            <!-- Attendance Stats (Lecturer View) -->
             <div v-if="isLecturer" class="attendance-page__session-stats">
               <div class="attendance-page__stat">
                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Present</span>
@@ -382,7 +266,6 @@ definePageMeta({
               </div>
             </div>
 
-            <!-- Actions -->
             <div class="attendance-page__session-actions">
               <template v-if="isLecturer">
                 <BaseButton
@@ -406,7 +289,7 @@ definePageMeta({
               </template>
               <template v-else>
                 <BaseButton
-                    v-if="session.status === 'active' && !hasMarkedAttendance(session.id)"
+                    v-if="session.status === 'active'"
                     variant="primary"
                     size="sm"
                     block
@@ -415,12 +298,6 @@ definePageMeta({
                 >
                   Mark Present
                 </BaseButton>
-                <p
-                    v-else-if="session.status === 'active'"
-                    class="text-center text-sm text-green-600 dark:text-green-400"
-                >
-                  ✓ Attendance Marked
-                </p>
                 <p
                     v-else
                     class="text-center text-sm text-gray-500 dark:text-gray-400"
@@ -436,9 +313,8 @@ definePageMeta({
 
     <CreateAttendanceSessionPopup
         :show="showCreateSession"
-        :lecturer-courses="lecturerCourses"
+        :lecturer-courses="courses"
         @close="showCreateSession = false"
-        @create="createSession"
     />
   </div>
 </template>
@@ -537,7 +413,7 @@ definePageMeta({
 }
 
 .filters-dropdown {
-  @apply p-4 space-y-4 w-64;
+  @apply p-4 space-y-4 w-56;
 
   &__section {
     @apply space-y-1;
