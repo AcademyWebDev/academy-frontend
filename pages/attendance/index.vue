@@ -8,6 +8,7 @@ import {
   UserIcon,
   MapPinIcon
 } from '@heroicons/vue/24/outline'
+import {CheckCircleIcon} from '@heroicons/vue/24/solid'
 import {useAuthStore} from '~/strores/auth'
 import {useAttendanceStore} from '~/strores/attendance'
 import BaseDropdown from "~/components/common/BaseDropdown.vue";
@@ -100,6 +101,21 @@ const formatDateTime = (dateString: string) => {
 
 const calculateRate = (present: number, total: number) => {
   return total ? Math.round((present / total) * 100) : 0
+}
+
+const formatTime = (isoString: string) => {
+  return new Date(isoString).toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const hasMarkedAttendance = (sessionId: number) => {
+  return attendanceStore.hasMarkedAttendance(sessionId)
+}
+
+const getAttendanceTime = (sessionId: number) => {
+  return attendanceStore.getAttendanceTime(sessionId)
 }
 
 // Fetch data on mount
@@ -288,16 +304,29 @@ definePageMeta({
                 </BaseButton>
               </template>
               <template v-else>
-                <BaseButton
-                    v-if="session.status === 'active'"
-                    variant="primary"
-                    size="sm"
-                    block
-                    :loading="markingAttendance === session.id"
-                    @click="markAttendance(session.id)"
-                >
-                  Mark Present
-                </BaseButton>
+                <template v-if="session.status === 'active'">
+                  <template v-if="hasMarkedAttendance(session.id)">
+                    <div class="flex flex-col items-center gap-2">
+                      <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
+                        <CheckCircleIcon class="h-5 w-5"/>
+                        <span class="text-sm font-medium">Attendance Marked</span>
+                      </div>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Marked at {{ formatTime(getAttendanceTime(session.id)) }}
+                      </p>
+                    </div>
+                  </template>
+                  <BaseButton
+                      v-else
+                      variant="primary"
+                      size="sm"
+                      block
+                      :loading="markingAttendance === session.id"
+                      @click="markAttendance(session.id)"
+                  >
+                    Mark Present
+                  </BaseButton>
+                </template>
                 <p
                     v-else
                     class="text-center text-sm text-gray-500 dark:text-gray-400"

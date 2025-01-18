@@ -14,6 +14,9 @@ interface AttendanceSession {
     requireLocation: boolean
     presentCount: number
     totalStudents: number
+    attendanceMarked?: {
+        timestamp: string;
+    };
 }
 
 interface CreateSessionData {
@@ -131,6 +134,16 @@ export const useAttendanceStore = defineStore('attendance', () => {
         }
     }
 
+    const markedAttendances = ref<Record<number, string>>({}) // sessionId -> timestamp
+
+    function hasMarkedAttendance(sessionId: number) {
+        return !!markedAttendances.value[sessionId]
+    }
+
+    function getAttendanceTime(sessionId: number) {
+        return markedAttendances.value[sessionId]
+    }
+
     async function markAttendance(sessionId: number) {
         try {
             if (process.env.NODE_ENV === 'development') {
@@ -138,19 +151,22 @@ export const useAttendanceStore = defineStore('attendance', () => {
                 const session = sessions.value.find(s => s.id === sessionId)
                 if (session) {
                     session.presentCount++
+                    markedAttendances.value[sessionId] = new Date().toISOString()
                 }
                 return
             }
 
             const axios = useAxios()
-            await axios.post(`/api/attendance/sessions/${sessionId}/mark`)
-            await fetchSessions() // Refresh to get updated counts
+            const {data} = await axios.post(`/api/attendance/sessions/${sessionId}/mark`)
+            markedAttendances.value[sessionId] = data.timestamp
+            await fetchSessions()
         } catch (err) {
             console.error('Error marking attendance:', err)
             error.value = 'Failed to mark attendance'
             throw err
         }
     }
+
 
     return {
         sessions,
@@ -160,10 +176,13 @@ export const useAttendanceStore = defineStore('attendance', () => {
 
         activeSessions,
         endedSessions,
+        markedAttendances,
 
         fetchSessions,
         createSession,
         endSession,
-        markAttendance
+        markAttendance,
+        hasMarkedAttendance,
+        getAttendanceTime,
     }
 })
