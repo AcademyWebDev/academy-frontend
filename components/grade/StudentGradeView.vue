@@ -7,7 +7,7 @@
       <div
           v-for="course in courses"
           :key="course.id"
-          class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden"
+          class="dark:border-gray-700 dark:bg-gray-700  shadow-sm rounded-lg overflow-hidden"
       >
         <!-- Course Header -->
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -32,7 +32,6 @@
           </div>
         </div>
 
-        # components/grades/StudentGradeView.vue (continued)
         <!-- Grades Table -->
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -64,7 +63,7 @@
             <tr
                 v-for="item in course.gradeItems"
                 :key="item.id"
-                class="hover:bg-gray-50 dark:hover:bg-gray-700"
+                class="hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-700 dark:hover:bg-gray-700"
             >
               <!-- Assessment Name -->
               <td class="px-6 py-4">
@@ -123,7 +122,7 @@
             </tr>
 
             <!-- Total Row -->
-            <tr class="bg-gray-50 dark:bg-gray-700/50 font-medium">
+            <tr class="dark:border-gray-700 dark:bg-gray-700/70 font-medium">
               <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                 Total
               </td>
