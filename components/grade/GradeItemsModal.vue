@@ -192,7 +192,6 @@
 
     <!-- Delete Confirmation Modal -->
     <CModal
-        v-if="itemToDelete"
         :visible="!!itemToDelete"
         @close="itemToDelete = null"
         size="sm"

@@ -85,6 +85,7 @@ const handleUpdateItem = async (itemId: number, updates: any) => {
 
 const handleDeleteItem = async (itemId: number) => {
   try {
+    console.log(selectedCourse.value.id)
     await gradesStore.deleteGradeItem(selectedCourse.value.id, itemId)
     // Could add success toast here
   } catch (error) {
