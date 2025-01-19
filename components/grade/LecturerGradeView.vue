@@ -1,6 +1,101 @@
+<script setup lang="ts">
+import {ref, computed} from 'vue'
+import {useGradesStore} from '~/strores/grade'
+import GradeItemsModal from "~/components/grade/GradeItemsModal.vue";
+import BaseButton from "~/components/common/BaseButton.vue";
+
+const gradesStore = useGradesStore()
+const courses = computed(() => gradesStore.coursesByLecturer(1)) // Replace with actual lecturer ID
+const gradeInputs = ref<Record<string, number | null>>({})
+
+courses.value.forEach(course => {
+  course.students.forEach(student => {
+    course.gradeItems.forEach(item => {
+      const grade = course.grades.find(
+          g => g.studentId === student.id && g.gradeItemId === item.id
+      )
+      gradeInputs.value[`${course.id}-${student.id}-${item.id}`] = grade?.score ?? null
+    })
+  })
+})
+
+const updateGrade = async (courseId: number, studentId: number, gradeItemId: number) => {
+  const key = `${courseId}-${studentId}-${gradeItemId}`
+  const score = gradeInputs.value[key]
+  await gradesStore.updateGrade(courseId, studentId, gradeItemId, score)
+}
+
+const getStudentFinalGrade = (course: any, studentId: number) => {
+  const studentGrades = course.grades.filter(g => g.studentId === studentId)
+  return gradesStore.calculateFinalGrade(studentGrades, course)
+}
+
+const getGradeColor = (grade: number | null) => {
+  if (grade === null) return ''
+  if (grade >= 90) return 'text-green-600 dark:text-green-400'
+  if (grade >= 80) return 'text-primary-600 dark:text-primary-400'
+  if (grade >= 70) return 'text-yellow-600 dark:text-yellow-400'
+  return 'text-error-600 dark:text-error-400'
+}
+
+const showAddModal = ref(false)
+const selectedCourse = ref(null)
+
+const openAddModal = (course) => {
+  selectedCourse.value = course
+  showAddModal.value = true
+}
+
+const closeAddModal = () => {
+  selectedCourse.value = null
+  showAddModal.value = false
+}
+
+const showGradeItemsModal = ref(false)
+
+const openGradeItems = (course) => {
+  selectedCourse.value = course
+  showGradeItemsModal.value = true
+}
+
+const closeGradeItemsModal = () => {
+  selectedCourse.value = null
+  showGradeItemsModal.value = false
+}
+
+const handleAddItem = async (itemData) => {
+  try {
+    await gradesStore.addGradeItem(selectedCourse.value.id, itemData)
+    // Could add success toast here
+  } catch (error) {
+    console.error('Failed to add grade item:', error)
+    // Could add error toast here
+  }
+}
+
+const handleUpdateItem = async (itemId: number, updates: any) => {
+  try {
+    await gradesStore.updateGradeItem(selectedCourse.value.id, itemId, updates)
+    // Could add success toast here
+  } catch (error) {
+    console.error('Failed to update grade item:', error)
+    // Could add error toast here
+  }
+}
+
+const handleDeleteItem = async (itemId: number) => {
+  try {
+    await gradesStore.deleteGradeItem(selectedCourse.value.id, itemId)
+    // Could add success toast here
+  } catch (error) {
+    console.error('Failed to delete grade item:', error)
+    // Could add error toast here
+  }
+}
+</script>
+
 <template>
   <div class="space-y-6">
-    <!-- Course Selection -->
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Your Courses</h2>
@@ -9,8 +104,6 @@
         </p>
       </div>
     </div>
-
-
     <div
         v-for="course in courses"
         :key="course.id"
@@ -26,7 +119,17 @@
               {{ course.code }} • {{ course.students.length }} Students
             </p>
           </div>
+          <BaseButton
+              variant="outline"
+              size="sm"
+              :leftIcon="Cog6ToothIcon"
+              @click="openGradeItems(course)"
+          >
+            Manage Grade Items
+          </BaseButton>
         </div>
+
+
       </div>
 
       <!-- Table Section -->
@@ -102,48 +205,17 @@
         </div>
       </div>
     </div>
+
+    <GradeItemsModal
+        :show="showGradeItemsModal"
+        :course="selectedCourse"
+        @close="closeGradeItemsModal"
+        @add="handleAddItem"
+        @update="handleUpdateItem"
+        @delete="handleDeleteItem"
+    />
   </div>
 </template>
-
-<script setup lang="ts">
-import {ref, computed} from 'vue'
-import {useGradesStore} from '~/strores/grade'
-
-const gradesStore = useGradesStore()
-const courses = computed(() => gradesStore.coursesByLecturer(1)) // Replace with actual lecturer ID
-const gradeInputs = ref<Record<string, number | null>>({})
-
-// Initialize grade inputs
-courses.value.forEach(course => {
-  course.students.forEach(student => {
-    course.gradeItems.forEach(item => {
-      const grade = course.grades.find(
-          g => g.studentId === student.id && g.gradeItemId === item.id
-      )
-      gradeInputs.value[`${course.id}-${student.id}-${item.id}`] = grade?.score ?? null
-    })
-  })
-})
-
-const updateGrade = async (courseId: number, studentId: number, gradeItemId: number) => {
-  const key = `${courseId}-${studentId}-${gradeItemId}`
-  const score = gradeInputs.value[key]
-  await gradesStore.updateGrade(courseId, studentId, gradeItemId, score)
-}
-
-const getStudentFinalGrade = (course: any, studentId: number) => {
-  const studentGrades = course.grades.filter(g => g.studentId === studentId)
-  return gradesStore.calculateFinalGrade(studentGrades, course)
-}
-
-const getGradeColor = (grade: number | null) => {
-  if (grade === null) return ''
-  if (grade >= 90) return 'text-green-600 dark:text-green-400'
-  if (grade >= 80) return 'text-primary-600 dark:text-primary-400'
-  if (grade >= 70) return 'text-yellow-600 dark:text-yellow-400'
-  return 'text-error-600 dark:text-error-400'
-}
-</script>
 
 <style scoped>
 .form-input {

@@ -109,6 +109,58 @@ export const useGradesStore = defineStore('grades', () => {
         // In a real app, you would make an API call here
     }
 
+    async function addGradeItem(courseId: number, itemData: {
+        name: string
+        maxScore: number
+        weight: number
+    }) {
+        const course = courses.value.find(c => c.id === courseId)
+        if (!course) return
+
+        // In a real app, this would be an API call
+        const newItem = {
+            id: Date.now(), // Would come from backend
+            ...itemData
+        }
+
+        course.gradeItems.push(newItem)
+
+        // Initialize grades as null for all students
+        course.students.forEach(student => {
+            course.grades.push({
+                studentId: student.id,
+                gradeItemId: newItem.id,
+                score: null
+            })
+        })
+
+        return newItem
+    }
+
+    async function deleteGradeItem(courseId: number, itemId: number) {
+        const course = courses.value.find(c => c.id === courseId)
+        if (!course) return
+
+        // Remove the item
+        course.gradeItems = course.gradeItems.filter(item => item.id !== itemId)
+        // Remove associated grades
+        course.grades = course.grades.filter(grade => grade.gradeItemId !== itemId)
+    }
+
+    async function updateGradeItem(
+        courseId: number,
+        itemId: number,
+        updates: { name: string; maxScore: number; weight: number }
+    ) {
+        const course = courses.value.find(c => c.id === courseId)
+        if (!course) return
+
+        const item = course.gradeItems.find(item => item.id === itemId)
+        if (item) {
+            Object.assign(item, updates)
+        }
+    }
+
     return {
         courses,
         loading,
@@ -117,6 +169,9 @@ export const useGradesStore = defineStore('grades', () => {
         coursesByStudent,
         getStudentGrades,
         updateGrade,
-        calculateFinalGrade
+        calculateFinalGrade,
+        addGradeItem,
+        deleteGradeItem,
+        updateGradeItem
     }
 })
