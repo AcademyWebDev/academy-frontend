@@ -1,230 +1,122 @@
 import {defineStore} from 'pinia'
 import {ref, computed} from 'vue'
-import {useAxios} from '~/composables/useAxios'
-
-interface GradeItem {
-    id: number
-    courseId: number
-    studentId: number
-    type: 'quiz' | 'assignment' | 'midterm' | 'final' | 'project'
-    score: number
-    maxScore: number
-    weight: number
-    comment?: string
-    date: string
-}
-
-interface CourseGrade {
-    id: number
-    courseId: number
-    courseName: string
-    lecturer: string
-    student: {
-        id: number
-        name: string
-    }
-    items: GradeItem[]
-    finalGrade?: number
-    status: 'draft' | 'published'
-    lastUpdated: string
-}
+import type {Course, StudentGrade, CourseWithGrades} from '~/types/grades'
 
 export const useGradesStore = defineStore('grades', () => {
     // State
-    const grades = ref<CourseGrade[]>([])
+    const courses = ref<CourseWithGrades[]>([
+        {
+            id: 1,
+            code: 'CS101',
+            name: 'Introduction to Programming',
+            lecturer: 'Dr. Smith',
+            students: [
+                {id: 1, name: 'John Doe', email: 'john@example.com'},
+                {id: 2, name: 'Jane Smith', email: 'jane@example.com'},
+            ],
+            gradeItems: [
+                {id: 1, name: 'Quiz 1', maxScore: 20, weight: 20},
+                {id: 2, name: 'Midterm', maxScore: 100, weight: 30},
+                {id: 3, name: 'Final', maxScore: 100, weight: 50},
+            ],
+            grades: [
+                {studentId: 1, gradeItemId: 1, score: 18},
+                {studentId: 1, gradeItemId: 2, score: 85},
+                {studentId: 2, gradeItemId: 1, score: 15},
+            ]
+        }
+    ])
     const loading = ref(false)
-    const saving = ref(false)
     const error = ref<string | null>(null)
 
     // Getters
-    const publishedGrades = computed(() =>
-        grades.value.filter(grade => grade.status === 'published')
-    )
+    const coursesByLecturer = computed(() => (lecturerId: number) => {
+        // In a real app, filter by lecturer ID
+        return courses.value
+    })
 
-    const draftGrades = computed(() =>
-        grades.value.filter(grade => grade.status === 'draft')
-    )
+    const coursesByStudent = computed(() => (studentId: number) => {
+        return courses.value.filter(course =>
+            course.students.some(student => student.id === studentId)
+        )
+    })
 
-    const getGradeByCourse = computed(() => (courseId: number) =>
-        grades.value.find(grade => grade.courseId === courseId)
-    )
+    // Helper function to calculate weighted average
+    const calculateFinalGrade = (grades: StudentGrade[], course: Course) => {
+        let totalWeight = 0
+        let weightedSum = 0
 
-    // Calculate final grade based on weighted items
-    const calculateFinalGrade = (items: GradeItem[]) => {
-        const totalWeightedScore = items.reduce((acc, item) => {
-            const percentage = (item.score / item.maxScore) * 100
-            return acc + (percentage * (item.weight / 100))
-        }, 0)
-        return Math.round(totalWeightedScore * 100) / 100
+        course.gradeItems.forEach(item => {
+            const grade = grades.find(g => g.gradeItemId === item.id)
+            if (grade?.score !== null && grade?.score !== undefined) {
+                const percentage = (grade.score / item.maxScore) * 100
+                weightedSum += percentage * item.weight
+                totalWeight += item.weight
+            }
+        })
+
+        return totalWeight > 0 ? Math.round(weightedSum / totalWeight) : null
+    }
+
+    // Get student grades for a course
+    const getStudentGrades = (courseId: number, studentId: number) => {
+        const course = courses.value.find(c => c.id === courseId)
+        if (!course) return null
+
+        const grades = course.grades.filter(g => g.studentId === studentId)
+        const gradeDetails = course.gradeItems.map(item => {
+            const grade = grades.find(g => g.gradeItemId === item.id)
+            return {
+                ...item,
+                score: grade?.score ?? null,
+                percentage: grade?.score !== null ?
+                    Math.round((grade.score / item.maxScore) * 100) : null
+            }
+        })
+
+        return {
+            courseInfo: {
+                id: course.id,
+                code: course.code,
+                name: course.name,
+                lecturer: course.lecturer
+            },
+            grades: gradeDetails,
+            finalGrade: calculateFinalGrade(grades, course)
+        }
     }
 
     // Actions
-    async function fetchGrades() {
-        loading.value = true
-        error.value = null
+    async function updateGrade(
+        courseId: number,
+        studentId: number,
+        gradeItemId: number,
+        score: number | null
+    ) {
+        const course = courses.value.find(c => c.id === courseId)
+        if (!course) return
 
-        try {
-            if (process.env.NODE_ENV === 'development') {
-                await new Promise(resolve => setTimeout(resolve, 1000))
-                grades.value = [
-                    {
-                        id: 1,
-                        courseId: 1,
-                        courseName: 'Web Development',
-                        lecturer: 'Dr. Smith',
-                        student: {
-                            id: 1,
-                            name: 'John Doe'
-                        },
-                        items: [
-                            {
-                                id: 1,
-                                courseId: 1,
-                                studentId: 1,
-                                type: 'assignment',
-                                score: 85,
-                                maxScore: 100,
-                                weight: 30,
-                                date: '2024-01-15'
-                            },
-                            {
-                                id: 2,
-                                courseId: 1,
-                                studentId: 1,
-                                type: 'midterm',
-                                score: 78,
-                                maxScore: 100,
-                                weight: 30,
-                                date: '2024-01-20'
-                            }
-                        ],
-                        status: 'published',
-                        lastUpdated: '2024-01-20'
-                    }
-                    // Add more mock data as needed
-                ]
-                return
-            }
+        const gradeIndex = course.grades.findIndex(
+            g => g.studentId === studentId && g.gradeItemId === gradeItemId
+        )
 
-            const axios = useAxios()
-            const {data} = await axios.get('/api/grades')
-            grades.value = data
-        } catch (err) {
-            console.error('Error fetching grades:', err)
-            error.value = 'Failed to load grades'
-            throw err
-        } finally {
-            loading.value = false
+        if (gradeIndex !== -1) {
+            course.grades[gradeIndex].score = score
+        } else {
+            course.grades.push({studentId, gradeItemId, score})
         }
-    }
 
-    async function addGradeItem(courseId: number, gradeData: Omit<GradeItem, 'id'>) {
-        saving.value = true
-        error.value = null
-
-        try {
-            if (process.env.NODE_ENV === 'development') {
-                await new Promise(resolve => setTimeout(resolve, 1000))
-                const grade = grades.value.find(g => g.courseId === courseId)
-                if (grade) {
-                    const newItem = {
-                        id: Date.now(),
-                        ...gradeData
-                    }
-                    grade.items.push(newItem)
-                    grade.finalGrade = calculateFinalGrade(grade.items)
-                    grade.lastUpdated = new Date().toISOString()
-                }
-                return
-            }
-
-            const axios = useAxios()
-            const {data} = await axios.post(`/api/grades/${courseId}/items`, gradeData)
-            await fetchGrades()
-        } catch (err) {
-            console.error('Error adding grade item:', err)
-            error.value = 'Failed to add grade'
-            throw err
-        } finally {
-            saving.value = false
-        }
-    }
-
-    async function updateGradeItem(courseId: number, itemId: number, updates: Partial<GradeItem>) {
-        saving.value = true
-        error.value = null
-
-        try {
-            if (process.env.NODE_ENV === 'development') {
-                await new Promise(resolve => setTimeout(resolve, 1000))
-                const grade = grades.value.find(g => g.courseId === courseId)
-                if (grade) {
-                    const item = grade.items.find(i => i.id === itemId)
-                    if (item) {
-                        Object.assign(item, updates)
-                        grade.finalGrade = calculateFinalGrade(grade.items)
-                        grade.lastUpdated = new Date().toISOString()
-                    }
-                }
-                return
-            }
-
-            const axios = useAxios()
-            await axios.put(`/api/grades/${courseId}/items/${itemId}`, updates)
-            await fetchGrades()
-        } catch (err) {
-            console.error('Error updating grade item:', err)
-            error.value = 'Failed to update grade'
-            throw err
-        } finally {
-            saving.value = false
-        }
-    }
-
-    async function publishGrades(courseId: number) {
-        saving.value = true
-        error.value = null
-
-        try {
-            if (process.env.NODE_ENV === 'development') {
-                await new Promise(resolve => setTimeout(resolve, 1000))
-                const grade = grades.value.find(g => g.courseId === courseId)
-                if (grade) {
-                    grade.status = 'published'
-                    grade.lastUpdated = new Date().toISOString()
-                }
-                return
-            }
-
-            const axios = useAxios()
-            await axios.post(`/api/grades/${courseId}/publish`)
-            await fetchGrades()
-        } catch (err) {
-            console.error('Error publishing grades:', err)
-            error.value = 'Failed to publish grades'
-            throw err
-        } finally {
-            saving.value = false
-        }
+        // In a real app, you would make an API call here
     }
 
     return {
-        // State
-        grades,
+        courses,
         loading,
-        saving,
         error,
-
-        // Getters
-        publishedGrades,
-        draftGrades,
-        getGradeByCourse,
-
-        // Actions
-        fetchGrades,
-        addGradeItem,
-        updateGradeItem,
-        publishGrades,
+        coursesByLecturer,
+        coursesByStudent,
+        getStudentGrades,
+        updateGrade,
         calculateFinalGrade
     }
 })
