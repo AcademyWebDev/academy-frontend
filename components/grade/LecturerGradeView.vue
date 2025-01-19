@@ -14,7 +14,7 @@
     <div
         v-for="course in courses"
         :key="course.id"
-        class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+        class="border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
     >
       <div class="px-6 dark:bg-gray-700 py-4 border-b border-gray-200">
         <div class="flex justify-between items-center">
