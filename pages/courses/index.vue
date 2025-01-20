@@ -24,8 +24,7 @@ const filters = ref({
   sortBy: 'date'
 })
 
-// Computed
-const isLecturer = computed(() => authStore.isLecturer || authStore.isAdmin)
+const isAdmin = computed(() => authStore.isAdmin)
 const loading = computed(() => courseStore.loading)
 const error = computed(() => courseStore.error)
 
@@ -119,6 +118,114 @@ const handleCreateCourse = async (courseData) => {
   }
 }
 
+const showUpdateModal = ref(false)
+const showRateModal = ref(false)
+const selectedCourse = ref(null)
+
+// Mock data (replace with your store/API data)
+const courses = ref([
+  {
+    id: 1,
+    title: 'Introduction to Programming',
+    lecturer: 'Dr. Smith',
+    thumbnail: '/course-placeholder.jpg',
+    capacity: 30,
+    enrolled: 25,
+    schedule: 'Mon/Wed 09:00-10:30',
+    status: 'active',
+    rating: 4.5,
+    ratingCount: 15
+  },
+  {
+    id: 2,
+    title: 'Web Development',
+    thumbnail: '/course-placeholder.jpg',
+    lecturer: '', // Will show as "Unassigned"
+    capacity: 25,
+    enrolled: 0,
+    schedule: 'Tue/Thu 11:00-12:30',
+    status: 'upcoming'
+  }
+])
+
+// Computed
+const isLecturer = computed(() => authStore.isLecturer)
+
+// Methods
+const isEnrolled = (courseId) => {
+  // Replace with your enrollment check logic
+  return true
+}
+
+const hasRated = (courseId) => {
+  // Replace with your rating check logic
+  return false
+}
+
+// Handle course actions
+const handleUpdateCourse = (course) => {
+  selectedCourse.value = course
+  showUpdateModal.value = true
+}
+
+const handleManageCourse = (course) => {
+  // Navigate to course management page
+  navigateTo(`/courses/${course.id}/manage`)
+}
+
+const handleEnrollCourse = async (course) => {
+  try {
+    // Replace with your enrollment logic
+    console.log('Enrolling in course:', course.id)
+    // Refresh courses after enrollment
+  } catch (error) {
+    console.error('Failed to enroll:', error)
+  }
+}
+
+const handleViewCourse = (course) => {
+  // Navigate to course view page
+  navigateTo(`/courses/${course.id}`)
+}
+
+const handleRateCourse = (course) => {
+  selectedCourse.value = course
+  showRateModal.value = true
+}
+
+// Modal handlers
+const closeUpdateModal = () => {
+  showUpdateModal.value = false
+  selectedCourse.value = null
+}
+
+const closeRateModal = () => {
+  showRateModal.value = false
+  selectedCourse.value = null
+}
+
+const handleCourseUpdate = async (updatedData) => {
+  try {
+    // Replace with your update logic
+    console.log('Updating course:', updatedData)
+    // Refresh courses after update
+    closeUpdateModal()
+  } catch (error) {
+    console.error('Failed to update course:', error)
+  }
+}
+
+const handleCourseRating = async (rating) => {
+  try {
+    // Replace with your rating logic
+    console.log('Rating course:', rating)
+    // Refresh courses after rating
+    closeRateModal()
+  } catch (error) {
+    console.error('Failed to rate course:', error)
+  }
+}
+
 definePageMeta({
   layout: 'default',
   middleware: ['auth']
@@ -137,7 +244,7 @@ definePageMeta({
 
       <div class="courses-page__actions">
         <BaseButton
-            v-if="isLecturer"
+            v-if="isAdmin"
             variant="primary"
             :leftIcon="PlusIcon"
             @click="showCreateModal = true"
@@ -233,13 +340,16 @@ definePageMeta({
 
       <div v-else class="courses-page__grid">
         <CourseCard
-            v-for="course in filteredCourses"
+            v-for="course in courses"
             :key="course.id"
             :course="course"
-            :is-lecturer="isLecturer"
-            @enroll="enrollInCourse"
-            @view="viewCourse"
-            @rate="rateCourse"
+            :is-enrolled="isEnrolled(course.id)"
+            :has-rated="hasRated(course.id)"
+            @update="handleUpdateCourse"
+            @manage="handleManageCourse"
+            @enroll="handleEnrollCourse"
+            @view="handleViewCourse"
+            @rate="handleRateCourse"
         />
       </div>
 
