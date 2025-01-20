@@ -59,21 +59,6 @@ const navigationItems = computed(() => {
     }
   ]
 
-  if (authStore.isLecturer || authStore.isAdmin) {
-    items.push(
-        {
-          label: 'Students',
-          path: '/students',
-          icon: defineAsyncComponent(() => import('@heroicons/vue/24/outline/UserGroupIcon'))
-        },
-        {
-          label: 'Reports',
-          path: '/reports',
-          icon: defineAsyncComponent(() => import('@heroicons/vue/24/outline/DocumentChartBarIcon'))
-        }
-    )
-  }
-
   if (authStore.isAdmin) {
     items.push({
       label: 'Settings',

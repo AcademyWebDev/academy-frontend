@@ -42,7 +42,7 @@ export const useAuthStore = defineStore('auth', () => {
                     id: 1,
                     email,
                     name: 'John Doe',
-                    role: 'lecturer',
+                    role: 'student',
                     avatar: '/default-avatar.jpg'
                 }
                 setUser(mockUser)
