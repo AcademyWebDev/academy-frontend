@@ -1,4 +1,3 @@
-# components/grades/GradeItemsModal.vue
 <template>
   <CModal
       :visible="show"

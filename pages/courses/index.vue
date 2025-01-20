@@ -12,6 +12,7 @@ import {useAuthStore} from '~/strores/auth'
 import BaseButton from "~/components/common/BaseButton.vue";
 import BaseDropdown from "~/components/common/BaseDropdown.vue";
 import BaseInput from "~/components/common/BaseInput.vue";
+import CreateCourseModal from "~/components/course/CreateCourseModal.vue";
 
 const courseStore = useCourseStore()
 const authStore = useAuthStore()
@@ -108,6 +109,16 @@ onMounted(() => {
   fetchCourses()
 })
 
+const showCreateModal = ref(false)
+
+const handleCreateCourse = async (courseData) => {
+  try {
+    await courseStore.createCourse(courseData)
+  } catch (error) {
+    console.error('Failed to create course:', error)
+  }
+}
+
 definePageMeta({
   layout: 'default',
   middleware: ['auth']
@@ -129,7 +140,7 @@ definePageMeta({
             v-if="isLecturer"
             variant="primary"
             :leftIcon="PlusIcon"
-            @click="navigateTo('/courses/create')"
+            @click="showCreateModal = true"
         >
           Create Course
         </BaseButton>
@@ -234,6 +245,11 @@ definePageMeta({
 
       <!--      <div v-if="totalPages > 1" class="courses-page__pagination">-->
       <!--      </div>-->
+      <CreateCourseModal
+          :show="showCreateModal"
+          @close="showCreateModal = false"
+          @create="handleCreateCourse"
+      />
     </div>
   </div>
 </template>
