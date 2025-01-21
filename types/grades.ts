@@ -17,11 +17,22 @@ export interface StudentGrade {
     score: number | null
 }
 
+export interface Lecturer {
+    id: number
+    name: string
+}
+
 export interface Course {
     id: number
     code: string
-    name: string
-    lecturer: string
+    title: string
+    lecturer: Lecturer
+    capacity: number
+    enrolled: number
+    status: 'active' | 'upcoming' | 'completed'
+    description?: string
+    thumbnail?: string
+    rating?: number
     students: Student[]
     gradeItems: GradeItem[]
 }

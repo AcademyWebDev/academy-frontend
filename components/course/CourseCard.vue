@@ -2,8 +2,13 @@
   <div class="course-card">
     <!-- Course Image -->
     <div class="course-card__image">
+      <!--      <img-->
+      <!--          :src="course.thumbnail || '/course-placeholder.jpg'"-->
+      <!--          :alt="course.title"-->
+      <!--          class="course-card__thumbnail"-->
+      <!--      >-->
       <img
-          :src="course.thumbnail || '/course-placeholder.jpg'"
+          src="/course-placeholder.jpg"
           :alt="course.title"
           class="course-card__thumbnail"
       >
@@ -25,7 +30,7 @@
       </h3>
 
       <p class="course-card__lecturer">
-        {{ course.lecturer || 'Unassigned' }}
+        {{ course.lecturer.name || 'Unassigned' }}
       </p>
 
       <!-- Capacity and Schedule -->
@@ -33,11 +38,6 @@
         <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <UsersIcon class="h-4 w-4"/>
           <span>{{ course.enrolled }}/{{ course.capacity }} enrolled</span>
-        </div>
-
-        <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-          <ClockIcon class="h-4 w-4"/>
-          <span>{{ course.schedule }}</span>
         </div>
       </div>
 
@@ -69,7 +69,7 @@
           />
         </div>
         <span class="text-sm text-gray-500 dark:text-gray-400">
-          {{ course.ratingCount }} ratings
+          {{ course.rating }} ratings
         </span>
       </div>
       <div v-else>
@@ -150,25 +150,14 @@
 <script setup lang="ts">
 import {
   UsersIcon,
-  ClockIcon,
   StarIcon
 } from '@heroicons/vue/24/solid'
 import {useAuthStore} from '~/strores/auth'
 import BaseButton from "~/components/common/BaseButton.vue";
+import type {Course} from "~/types/grades";
 
 interface Props {
-  course: {
-    id: number
-    title: string
-    lecturer: string
-    thumbnail?: string
-    capacity: number
-    enrolled: number
-    schedule: string
-    status: 'active' | 'upcoming' | 'completed'
-    rating?: number
-    ratingCount?: number
-  }
+  course: Course
   isEnrolled?: boolean
   hasRated?: boolean
 }

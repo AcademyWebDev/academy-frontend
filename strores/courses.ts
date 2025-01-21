@@ -3,6 +3,7 @@ import {defineStore} from 'pinia'
 import {ref, computed} from 'vue'
 import {z} from 'zod'
 import {useAxios, useMockApi} from '~/composables/useAxios'
+import type {Course} from "~/types/grades";
 
 const courseSchema = z.object({
     id: z.number(),
@@ -11,13 +12,10 @@ const courseSchema = z.object({
     capacity: z.number().min(1),
     enrolled: z.number(),
     lecturer: z.string(),
-    schedule: z.string(),
     status: z.enum(['active', 'upcoming', 'completed']).default('active'),
     rating: z.number().min(0).max(5).optional(),
     thumbnail: z.string().optional(),
 })
-
-export type Course = z.infer<typeof courseSchema>
 
 export const useCourseStore = defineStore('courses', () => {
     const courses = ref<Course[]>([])
@@ -152,6 +150,10 @@ export const useCourseStore = defineStore('courses', () => {
         selectedCourse.value = course
     }
 
+    function clearSelectedCourse() {
+        selectedCourse.value = null
+    }
+
     return {
         courses,
         selectedCourse,
@@ -169,5 +171,6 @@ export const useCourseStore = defineStore('courses', () => {
         createCourse,
         updateCourse,
         setSelectedCourse,
+        clearSelectedCourse
     }
 })

@@ -62,19 +62,6 @@
             </select>
           </div>
 
-          <!-- Schedule -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Schedule
-            </label>
-            <select v-model="form.schedule" class="form-select w-full">
-              <option value="Mon/Wed 09:00-10:30">Mon/Wed 09:00-10:30</option>
-              <option value="Mon/Wed 11:00-12:30">Mon/Wed 11:00-12:30</option>
-              <option value="Tue/Thu 09:00-10:30">Tue/Thu 09:00-10:30</option>
-              <option value="Tue/Thu 11:00-12:30">Tue/Thu 11:00-12:30</option>
-            </select>
-          </div>
-
           <!-- Description -->
           <div class="col-span-2">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -133,7 +120,6 @@ const form = ref({
   code: '',
   capacity: 30,
   term: 'Fall 2024',
-  schedule: '',
   description: ''
 })
 
@@ -142,18 +128,15 @@ const isValid = computed(() => {
   return form.value.title.trim() &&
       form.value.code.trim() &&
       form.value.capacity > 0 &&
-      form.value.term &&
-      form.value.schedule
+      form.value.term
 })
 
-// Methods
 const handleClose = () => {
   form.value = {
     title: '',
     code: '',
     capacity: 30,
     term: 'Fall 2024',
-    schedule: '',
     description: ''
   }
   emit('close')

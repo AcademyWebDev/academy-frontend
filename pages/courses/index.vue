@@ -13,11 +13,12 @@ import BaseButton from "~/components/common/BaseButton.vue";
 import BaseDropdown from "~/components/common/BaseDropdown.vue";
 import BaseInput from "~/components/common/BaseInput.vue";
 import CreateCourseModal from "~/components/course/CreateCourseModal.vue";
+import UpdateCourseModal from "~/components/course/UpdateCourseModal.vue";
+import type {Course} from "~/types/grades";
 
 const courseStore = useCourseStore()
 const authStore = useAuthStore()
 
-// State
 const searchQuery = ref('')
 const filters = ref({
   status: 'all',
@@ -31,16 +32,14 @@ const error = computed(() => courseStore.error)
 const filteredCourses = computed(() => {
   let courses = courseStore.courses
 
-  // Apply search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     courses = courses.filter(course =>
         course.title.toLowerCase().includes(query) ||
-        course.lecturer.toLowerCase().includes(query)
+        course.lecturer.name.toLowerCase().includes(query)
     )
   }
 
-  // Apply status filter
   switch (filters.value.status) {
     case 'available':
       courses = courses.filter(course => course.enrolled < course.capacity)
@@ -53,16 +52,12 @@ const filteredCourses = computed(() => {
       break
   }
 
-  // Apply sorting
   switch (filters.value.sortBy) {
     case 'name':
       courses.sort((a, b) => a.title.localeCompare(b.title))
       break
     case 'rating':
       courses.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-      break
-    case 'date':
-      courses.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       break
   }
 
@@ -84,22 +79,7 @@ const enrollInCourse = async (courseId: number) => {
     await courseStore.enrollInCourse(courseId)
     // Show success message
   } catch (err) {
-    // Handle error
     console.error('Error enrolling in course:', err)
-  }
-}
-
-const viewCourse = (courseId: number) => {
-  navigateTo(`/courses/${courseId}`)
-}
-
-const rateCourse = async (courseId: number, rating: number) => {
-  try {
-    await courseStore.rateCourse(courseId, rating)
-    // Show success message
-  } catch (err) {
-    // Handle error
-    console.error('Error rating course:', err)
   }
 }
 
@@ -110,7 +90,7 @@ onMounted(() => {
 
 const showCreateModal = ref(false)
 
-const handleCreateCourse = async (courseData) => {
+const handleCreateCourse = async (courseData: Course) => {
   try {
     await courseStore.createCourse(courseData)
   } catch (error) {
@@ -119,63 +99,29 @@ const handleCreateCourse = async (courseData) => {
 }
 
 const showUpdateModal = ref(false)
-const showRateModal = ref(false)
-const selectedCourse = ref(null)
 
-// Mock data (replace with your store/API data)
-const courses = ref([
-  {
-    id: 1,
-    title: 'Introduction to Programming',
-    lecturer: 'Dr. Smith',
-    thumbnail: '/course-placeholder.jpg',
-    capacity: 30,
-    enrolled: 25,
-    schedule: 'Mon/Wed 09:00-10:30',
-    status: 'active',
-    rating: 4.5,
-    ratingCount: 15
-  },
-  {
-    id: 2,
-    title: 'Web Development',
-    thumbnail: '/course-placeholder.jpg',
-    lecturer: '', // Will show as "Unassigned"
-    capacity: 25,
-    enrolled: 0,
-    schedule: 'Tue/Thu 11:00-12:30',
-    status: 'upcoming'
-  }
-])
-
-// Computed
 const isLecturer = computed(() => authStore.isLecturer)
 
-// Methods
-const isEnrolled = (courseId) => {
-  // Replace with your enrollment check logic
+const isEnrolled = (courseId: number) => {
   return true
 }
 
-const hasRated = (courseId) => {
-  // Replace with your rating check logic
+const hasRated = (courseId: number) => {
   return false
 }
 
-// Handle course actions
-const handleUpdateCourse = (course) => {
-  selectedCourse.value = course
+const displayUpdateModal = (course: Course) => {
+  courseStore.setSelectedCourse(course)
   showUpdateModal.value = true
 }
 
-const handleManageCourse = (course) => {
+const handleManageCourse = (course: Course) => {
   // Navigate to course management page
   navigateTo(`/courses/${course.id}/manage`)
 }
 
-const handleEnrollCourse = async (course) => {
+const handleEnrollCourse = async (course: Course) => {
   try {
-    // Replace with your enrollment logic
     console.log('Enrolling in course:', course.id)
     // Refresh courses after enrollment
   } catch (error) {
@@ -183,47 +129,14 @@ const handleEnrollCourse = async (course) => {
   }
 }
 
-const handleViewCourse = (course) => {
+const handleViewCourse = (course: Course) => {
   // Navigate to course view page
   navigateTo(`/courses/${course.id}`)
 }
 
-const handleRateCourse = (course) => {
-  selectedCourse.value = course
-  showRateModal.value = true
-}
-
-// Modal handlers
 const closeUpdateModal = () => {
   showUpdateModal.value = false
-  selectedCourse.value = null
-}
-
-const closeRateModal = () => {
-  showRateModal.value = false
-  selectedCourse.value = null
-}
-
-const handleCourseUpdate = async (updatedData) => {
-  try {
-    // Replace with your update logic
-    console.log('Updating course:', updatedData)
-    // Refresh courses after update
-    closeUpdateModal()
-  } catch (error) {
-    console.error('Failed to update course:', error)
-  }
-}
-
-const handleCourseRating = async (rating) => {
-  try {
-    // Replace with your rating logic
-    console.log('Rating course:', rating)
-    // Refresh courses after rating
-    closeRateModal()
-  } catch (error) {
-    console.error('Failed to rate course:', error)
-  }
+  courseStore.clearSelectedCourse()
 }
 
 definePageMeta({
@@ -340,16 +253,15 @@ definePageMeta({
 
       <div v-else class="courses-page__grid">
         <CourseCard
-            v-for="course in courses"
+            v-for="course in courseStore.courses"
             :key="course.id"
             :course="course"
             :is-enrolled="isEnrolled(course.id)"
             :has-rated="hasRated(course.id)"
-            @update="handleUpdateCourse"
+            @update="displayUpdateModal"
             @manage="handleManageCourse"
             @enroll="handleEnrollCourse"
             @view="handleViewCourse"
-            @rate="handleRateCourse"
         />
       </div>
 
@@ -359,6 +271,12 @@ definePageMeta({
           :show="showCreateModal"
           @close="showCreateModal = false"
           @create="handleCreateCourse"
+      />
+
+      <UpdateCourseModal
+          v-show="showUpdateModal"
+          :show="showUpdateModal"
+          @close="closeUpdateModal"
       />
     </div>
   </div>
