@@ -5,6 +5,8 @@ import {z} from 'zod'
 import {useAxios, useMockApi} from '~/composables/useAxios'
 import type {Course} from "~/types/grades";
 
+const config = useRuntimeConfig()
+
 const courseSchema = z.object({
     id: z.number(),
     title: z.string().min(3),
@@ -49,7 +51,7 @@ export const useCourseStore = defineStore('courses', () => {
         error.value = null
 
         try {
-            if (process.env.NODE_ENV === 'development') {
+            if (config.public.isDev) {
                 const mockApi = useMockApi()
                 courses.value = await mockApi.get<Course[]>('/api/courses')
                 return
@@ -73,7 +75,7 @@ export const useCourseStore = defineStore('courses', () => {
         }
 
         try {
-            if (process.env.NODE_ENV === 'development') {
+            if (config.public.isDev) {
                 const course = courses.value.find(c => c.id === courseId)
                 if (course) {
                     course.enrolled++
@@ -96,7 +98,7 @@ export const useCourseStore = defineStore('courses', () => {
         error.value = null
 
         try {
-            if (process.env.NODE_ENV === 'development') {
+            if (config.public.isDev) {
                 const mockCourse = {
                     id: courses.value.length + 1,
                     ...courseData,
@@ -124,7 +126,7 @@ export const useCourseStore = defineStore('courses', () => {
         error.value = null
 
         try {
-            if (process.env.NODE_ENV === 'development') {
+            if (config.public.isDev) {
                 const index = courses.value.findIndex(c => c.id === courseId)
                 if (index !== -1) {
                     courses.value[index] = {...courses.value[index], ...updates}

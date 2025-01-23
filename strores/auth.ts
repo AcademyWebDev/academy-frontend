@@ -4,6 +4,8 @@ import {ref, computed} from 'vue'
 import {z} from 'zod'
 import {useAxios} from '~/composables/useAxios'
 
+const config = useRuntimeConfig()
+
 const userSchema = z.object({
     id: z.number(),
     email: z.string().email(),
@@ -36,7 +38,7 @@ export const useAuthStore = defineStore('auth', () => {
     async function login(email: string, password: string) {
         loading.value = true
         try {
-            if (process.env.NODE_ENV === 'development') {
+            if (config.public.isDev) {
                 await new Promise(resolve => setTimeout(resolve, 1000))
                 const mockUser: User = {
                     id: 1,
@@ -69,7 +71,7 @@ export const useAuthStore = defineStore('auth', () => {
     async function register(data: RegisterData) {
         loading.value = true
         try {
-            if (process.env.NODE_ENV === 'development') {
+            if (config.public.isDev) {
                 await new Promise(resolve => setTimeout(resolve, 1000))
                 const mockUser = {
                     id: 1,
@@ -98,7 +100,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     async function logout() {
         try {
-            if (process.env.NODE_ENV !== 'development') {
+            if (!config.public.isDev) {
                 const axios = useAxios()
                 await axios.post('/api/auth/logout')
             }
@@ -113,7 +115,7 @@ export const useAuthStore = defineStore('auth', () => {
         if (!token.value) return false
 
         try {
-            if (process.env.NODE_ENV === 'development') {
+            if (config.public.isDev) {
                 return true
             }
 

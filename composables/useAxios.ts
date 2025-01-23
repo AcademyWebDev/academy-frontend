@@ -7,7 +7,7 @@ export const useAxios = () => {
     const authStore = useAuthStore()
 
     const axiosInstance: AxiosInstance = axios.create({
-        baseURL: config.public.apiBase,
+        baseURL: config.public.baseURL,
         timeout: 10000,
         headers: {
             'Content-Type': 'application/json',

@@ -2,6 +2,8 @@ import {defineStore} from 'pinia'
 import {ref, computed} from 'vue'
 import {useAxios} from '~/composables/useAxios'
 
+const config = useRuntimeConfig()
+
 interface AttendanceSession {
     id: number
     courseId: number
@@ -44,7 +46,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
         error.value = null
 
         try {
-            if (process.env.NODE_ENV === 'development') {
+            if (config.public.isDev) {
                 await new Promise(resolve => setTimeout(resolve, 1000))
                 sessions.value = [
                     {
@@ -81,7 +83,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
         error.value = null
 
         try {
-            if (process.env.NODE_ENV === 'development') {
+            if (config.public.isDev) {
                 await new Promise(resolve => setTimeout(resolve, 1500)) // Simulate API delay
                 const newSession: AttendanceSession = {
                     id: Date.now(),
@@ -115,7 +117,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
 
     async function endSession(sessionId: number) {
         try {
-            if (process.env.NODE_ENV === 'development') {
+            if (config.public.isDev) {
                 await new Promise(resolve => setTimeout(resolve, 500))
                 const session = sessions.value.find(s => s.id === sessionId)
                 if (session) {
@@ -146,7 +148,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
 
     async function markAttendance(sessionId: number) {
         try {
-            if (process.env.NODE_ENV === 'development') {
+            if (config.public.isDev) {
                 await new Promise(resolve => setTimeout(resolve, 1000))
                 const session = sessions.value.find(s => s.id === sessionId)
                 if (session) {
