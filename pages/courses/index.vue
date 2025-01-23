@@ -103,7 +103,7 @@ const showUpdateModal = ref(false)
 const isLecturer = computed(() => authStore.isLecturer)
 
 const isEnrolled = (courseId: number) => {
-  return true
+  return false
 }
 
 const hasRated = (courseId: number) => {

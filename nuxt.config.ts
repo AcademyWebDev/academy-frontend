@@ -21,7 +21,11 @@ export default defineNuxtConfig({
         pageTransition: {
             name: 'page',
             mode: 'out-in'
-        }
+        },
+        baseURL: '/academy-frontend/',
+    },
+    nitro: {
+        preset: 'github_pages'
     },
     runtimeConfig: {
         public: {
