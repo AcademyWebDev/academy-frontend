@@ -1,6 +1,8 @@
 <script setup lang="ts">
 
 import {CModal} from "@coreui/vue/dist/esm/components/modal";
+
+navigateTo('/dashboard/');
 </script>
 
 <template>
