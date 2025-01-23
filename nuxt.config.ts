@@ -29,7 +29,8 @@ export default defineNuxtConfig({
     },
     runtimeConfig: {
         public: {
-            isDev: process.env.NODE_ENV === 'development',
+            // isDev: process.env.NODE_ENV === 'development',
+            isDev: true,
             baseURL: 'http://127.0.0.1:8000/api/'
         },
     },
